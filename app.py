@@ -31,6 +31,6 @@ def chat():
 
 if __name__ == "__main__":
     import os
-    # Cloud Run hamesha PORT environment variable bhejta hai
+    # Cloud Run hamesha 'PORT' environment variable khud bhejta hai
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
