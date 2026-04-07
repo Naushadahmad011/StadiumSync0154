@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# Tumhe apni Gemini API Key yahan dalni hogi ya environment variable set karna hoga
-genai.configure(api_key="TUMHARI_GEMINI_API_KEY_YAHAN_DALO")
+# Gemini API Key 
+genai.configure(api_key="AIzaSyC2f4tvcZM3fSNCso4hMd5ELBrTymw_gFI")
 model = genai.GenerativeModel('gemini-pro')
 
 @app.route('/')
