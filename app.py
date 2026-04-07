@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Gemini API Key 
+# Gemini API Key configuration
 genai.configure(api_key="AIzaSyC2f4tvcZM3fSNCso4hMd5ELBrTymw_gFI")
 model = genai.GenerativeModel('gemini-pro')
 
@@ -14,13 +14,24 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = request.json
-    user_message = data.get('message')
-    # Yahan tumhara Gemini AI ka logic hona chahiye
-    # ...
-    return jsonify({'reply': "AI ka response yahan aayega"})
+    try:
+        data = request.json
+        user_message = data.get('message')
+        
+        if not user_message:
+            return jsonify({'reply': "Please type something!"}), 400
+
+        # Gemini AI ko user ka message bhejna aur response lena
+        response = model.generate_content(user_message)
+        ai_reply = response.text
+        
+        return jsonify({'reply': ai_reply})
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'reply': "Sorry, I am facing a network issue right now."}), 500
+
 if __name__ == "__main__":
-    import os
     # Cloud Run hamesha 'PORT' environment variable khud bhejta hai
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
