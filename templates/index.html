@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stadium Smart Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        * { font-family: 'Inter', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; }
+        .zone-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .zone-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+        .density-low { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .density-medium { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .density-high { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .connection-indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .connected { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .disconnected { background: #ef4444; }
+        .tab-button { transition: all 0.3s; }
+        .tab-button.active { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+        .alert-banner { animation: slideDown 0.5s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="alertBanner" class="hidden"></div>
+    
+    <header class="mb-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">🏟️ Stadium Experience</h1>
+                    <p class="text-gray-400 text-lg">Real-time crowd navigation & smart services</p>
+                </div>
+                <div class="text-right">
+                    <div class="flex items-center justify-end mb-2">
+                        <span class="connection-indicator" id="connectionIndicator"></span>
+                        <span class="text-sm text-gray-400" id="connectionStatus">Connecting...</span>
+                    </div>
+                    <div class="text-sm text-gray-500">Last updated: <span id="lastUpdate">--</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto">
+        <div class="flex gap-2 mb-6 flex-wrap">
+            <button class="tab-button active px-6 py-3 rounded-lg font-semibold bg-slate-700 text-white" onclick="switchTab('crowd')">📊 Crowd Monitor</button>
+            <button class="tab-button px-6 py-3 rounded-lg font-semibold bg-slate-700 text-white" onclick="switchTab('order')">🍔 Express Order</button>
+            <button class="tab-button px-6 py-3 rounded-lg font-semibold bg-slate-700 text-white" onclick="switchTab('admin')">🔔 Admin Alerts</button>
+        </div>
+
+        <div id="crowdTab" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-xl text-white">
+                    <div class="text-3xl font-bold" id="lowDensityCount">0</div>
+                    <div class="text-sm opacity-90">Low Density Zones</div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 p-6 rounded-xl text-white">
+                    <div class="text-3xl font-bold" id="mediumDensityCount">0</div>
+                    <div class="text-sm opacity-90">Medium Density Zones</div>
+                </div>
+                <div class="bg-gradient-to-br from-red-500 to-red-600 p-6 rounded-xl text-white">
+                    <div class="text-3xl font-bold" id="highDensityCount">0</div>
+                    <div class="text-sm opacity-90">High Density Zones</div>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl text-white">
+                    <div class="text-3xl font-bold" id="totalCapacity">0</div>
+                    <div class="text-sm opacity-90">Total Attendees</div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-3">🚪 Entry Points</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="entryZones"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-3">🍕 Food & Beverages</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="foodZones"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-3">🚻 Facilities</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="facilitiesZones"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-3">🛍️ Merchandise</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="shopZones"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white mb-3">💺 Seating Areas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="seatingZones"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="orderTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-800 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold text-white mb-4">🛒 Place Your Order</h3>
+                    <form id="orderForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Your Name</label>
+                            <input type="text" id="customerName" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Item Type</label>
+                            <select id="itemType" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                                <option value="">Select type...</option>
+                                <option value="food">🍔 Food</option>
+                                <option value="beverage">🥤 Beverage</option>
+                                <option value="merchandise">👕 Merchandise</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Item Name</label>
+                            <input type="text" id="itemName" required placeholder="e.g., Cheeseburger, Cola, Team Jersey" class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Quantity</label>
+                            <input type="number" id="quantity" value="1" min="1" max="10" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Pickup Location</label>
+                            <select id="pickupZone" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                                <option value="">Select location...</option>
+                                <option value="East Concessions">East Concessions</option>
+                                <option value="West Concessions">West Concessions</option>
+                                <option value="Merchandise Store A">Merchandise Store A</option>
+                                <option value="Merchandise Store B">Merchandise Store B</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-lg transition">Place Order</button>
+                    </form>
+                    <div id="orderSuccess" class="hidden mt-4 p-4 bg-green-500 text-white rounded-lg">
+                        <div class="font-bold text-lg">✅ Order Placed Successfully!</div>
+                        <div id="orderSuccessMessage" class="mt-2"></div>
+                    </div>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold text-white mb-4">📋 Recent Orders</h3>
+                    <div id="recentOrders" class="space-y-3 max-h-96 overflow-y-auto"><p class="text-gray-400">Loading...</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminTab" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-slate-800 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold text-white mb-4">📢 Send Alert</h3>
+                    <form id="alertForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Alert Message</label>
+                            <textarea id="alertMessage" required rows="4" placeholder="Enter your announcement..." class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Alert Type</label>
+                            <select id="alertType" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                                <option value="info">ℹ️ Information</option>
+                                <option value="warning">⚠️ Warning</option>
+                                <option value="emergency">🚨 Emergency</option>
+                                <option value="success">✅ Success</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-semibold">Priority</label>
+                            <select id="alertPriority" required class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none">
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition">Broadcast Alert</button>
+                    </form>
+                </div>
+                <div class="bg-slate-800 p-6 rounded-xl">
+                    <h3 class="text-2xl font-bold text-white mb-4">📜 Alert History</h3>
+                    <div id="alertHistory" class="space-y-3 max-h-96 overflow-y-auto"><p class="text-gray-400">Loading...</p></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
