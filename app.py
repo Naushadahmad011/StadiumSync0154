@@ -14,21 +14,11 @@ def home():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    user_msg = request.json.get("message")
-    
-    # AI ko context dena
-    context = """You are StadiMate, a helpful AI assistant for a large cricket stadium. 
-    Stadium details: Block A, B, C are near Gate 1. Block D, E, F are near Gate 2. 
-    Food stalls are near Gate 1 and Gate 3. Answer the user's query politely and shortly."""
-    
-    prompt = f"{context}\nUser: {user_msg}\nStadiMate:"
-    
-    try:
-        response = model.generate_content(prompt)
-        return jsonify({"reply": response.text})
-    except Exception as e:
-        return jsonify({"reply": "Sorry, I am facing a network issue right now."})
-
+    data = request.json
+    user_message = data.get('message')
+    # Yahan tumhara Gemini AI ka logic hona chahiye
+    # ...
+    return jsonify({'reply': "AI ka response yahan aayega"})
 if __name__ == "__main__":
     import os
     # Cloud Run hamesha 'PORT' environment variable khud bhejta hai
