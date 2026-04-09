@@ -29,7 +29,7 @@ def chat():
     
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({'reply': "Sorry, I am facing a network issue right now."}), 500
+        return jsonify({'reply': "hello,i'm good"}), 500
 
 if __name__ == "__main__":
     # Cloud Run hamesha 'PORT' environment variable khud bhejta hai
